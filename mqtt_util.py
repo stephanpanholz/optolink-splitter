@@ -41,10 +41,27 @@ def on_message(client, userdata, msg):
         print("MQTT recd:", msg.topic, msg.payload)  # ErrMsg oder so?
         return
     topic = str(msg.topic)            # Topic in String umwandeln
-    if topic == settings_ini.mqtt_listen:
-        rec = utils.bstr2str(msg.payload)
-        rec = rec.replace(' ','').replace('\0','').replace('\n','').replace('\r','').replace('"','').replace("'","")
-        cmnd_queue.append(rec) 
+    print(f"Topic:+{topic}")
+    
+    
+    topic_elements = topic.split("/")
+        
+    cmnd = topic_elements[2]
+    key = topic_elements[3]
+    value = utils.bstr2str(msg.payload)
+    value = value.replace(' ','').replace('\0','').replace('\n','').replace('\r','').replace('"','').replace("'","")
+        
+    cmnd_string = cmnd+";"+key
+    if (value!="") :
+        cmnd_string += ";"+value
+        
+    cmnd_queue.append(cmnd_string)     
+            
+    
+    #if topic == settings_ini.mqtt_listen:    
+        #rec = utils.bstr2str(msg.payload)
+        #rec = rec.replace(' ','').replace('\0','').replace('\n','').replace('\r','').replace('"','').replace("'","")
+        #cmnd_queue.append(rec) 
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
     # Since we subscribed only for a single channel, reason_code_list contains
@@ -78,11 +95,18 @@ def connect_mqtt():
     except Exception as e:
         raise Exception("Error connecting MQTT: " + str(e))
 
-def get_mqtt_request() -> str:
-    ret = ""
+def get_mqtt_request() -> tuple[str,str]:
+    cmnd = ""
+    parts = ""
     if len(cmnd_queue) > 0:
         ret = cmnd_queue.pop(0)
-    return ret
+        
+        if(isinstance(ret, str)):
+            parts = ret.split(';')
+            cmnd = parts[0]
+            del(parts[0])    
+        
+    return cmnd, parts
 
 def publish_read(name, addr, value):  
     if(mqtt_client != None):
