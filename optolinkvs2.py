@@ -187,7 +187,7 @@ def receive_vs2telegr(resptelegr:bool, raw:bool, ser:serial.Serial, ser2:serial.
                     if(settings_ini.show_opto_rx):
                         print("rx", utils.bbbstr(inbuff))
                     inbuff = inbuff[:pllen+4]  # make sure no tailing trash 
-                    addr = (inbuff[4] << 8) + inbuff[5]  # may be bullshit in case of raw
+                    addr = (inbuff[4] << 8) + inbuff[5]  # my be bullshit in case of raw
                     retdata = inbuff[7:pllen+2]   # STX + Len + FnctCode + MsgId + AddrHi + AddrLo + BlkLen (+ Data) + CRC
                     if(inbuff[-1] != calc_crc(inbuff)):
                         print("CRC Error")
@@ -281,11 +281,11 @@ def main():
                 time.sleep(0.1)
 
                 buff = read_datapoint(0x0802, 2, ser)
-                print("KT", utils.bbbstr(buff), utils.bytesval(buff, 0.1))
+                print("KT", utils.bbbstr(buff), utils.bytes2val(buff, 0.1))
                 time.sleep(0.1)
 
                 buff = read_datapoint(0x0804, 2, ser)
-                print("WW", utils.bbbstr(buff), utils.bytesval(buff, 0.1))
+                print("WW", utils.bbbstr(buff), utils.bytes2val(buff, 0.1))
                 time.sleep(1)
 
 
@@ -293,7 +293,7 @@ def main():
         if(False):
             buff = read_datapoint(0x6300, 1, ser)
             currval = buff
-            print("Soll Ist", utils.bbbstr(buff), bytesval(buff))
+            print("Soll Ist", utils.bbbstr(buff), bytes2val(buff))
             
             time.sleep(1)
 
@@ -304,7 +304,7 @@ def main():
             time.sleep(2)
 
             buff = read_datapoint(0x6300, 1, ser)
-            print("Soll neu", utils.bbbstr(buff), bytesval(buff))
+            print("Soll neu", utils.bbbstr(buff), bytes2val(buff))
 
             time.sleep(1)
 
@@ -314,7 +314,7 @@ def main():
             time.sleep(2)
 
             buff = read_datapoint(0x6300, 1, ser)
-            print("Soll read back", utils.bbbstr(buff), bytesval(buff))
+            print("Soll read back", utils.bbbstr(buff), bytes2val(buff))
 
     
     except KeyboardInterrupt:

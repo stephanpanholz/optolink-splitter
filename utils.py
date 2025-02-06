@@ -44,11 +44,26 @@ def get_bool(v) -> bool:
         return False
 
 
-def bytesval(data, scale=1, signd=False):
-    val = int.from_bytes(data, byteorder='little', signed=signd)
-    if(scale != 1):
-        val = round(val * scale, settings_ini.max_decimals)
-    return val
+def bytes2val(data, fScale=1, bSigned=False):
+    nVal = int.from_bytes(data, byteorder='little', signed=bSigned)
+    if(fScale != 1):
+        nVal = round(nVal * fScale, settings_ini.max_decimals)
+    return nVal
+    
+    
+def val2bytes(nVal, nLen, fScale=1, bSigned=False):
+    #nVal = get_int(nVal)
+    nVal = to_number(nVal)
+    
+    if(fScale != 1):
+        #nVal = round(nVal / fScale, settings_ini.max_decimals)
+        nVal = int(nVal / fScale)
+        
+    print(f"Signed:{bSigned}")    
+    
+    data = nVal.to_bytes(nLen, byteorder='little', signed=bSigned)
+    
+    return data    
 
 
 def bbbstr(data):

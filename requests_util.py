@@ -24,7 +24,7 @@ import time
 def get_value(data, frmat, signd:bool) -> any:
     scale = utils.to_number(frmat)
     if(scale is not None):
-        return utils.bytesval(data, scale, signd)
+        return utils.bytes2val(data, scale, signd)
     else:
         #TODO hier evtl weitere Formate umsetzen
         if(frmat == 'vdatetime'):
@@ -36,6 +36,19 @@ def get_value(data, frmat, signd:bool) -> any:
         else:
             #return raw
             return utils.arr2hexstr(data)
+            
+            
+def set_value(nVal, nLen, fScale, bSigned:bool) -> any:
+    #oScale = utils.to_number(sFormat)   
+    #if(oScale is not None):
+    
+    
+    
+    #print("Value0:"+nVal) 
+    
+    return utils.val2bytes(nVal, nLen, fScale, bSigned)
+
+        
 
 def perform_bytebit_filter(data, item):
     # item is poll list entry:    (Name, DpAddr, Len, 'b:startbyte:lastbyte:bitmask:endian', Scale, Signed)
@@ -157,7 +170,7 @@ def response_to_request(cmnd,request, serViDev, mod_mqtt) -> tuple[int, bytearra
         #addr = utils.get_int(parts[0])
         #nLen = int(parts[1])
         #factor = parts[2]
-        signed = False
+        
         #if(numelms > 3):
         #    signed = utils.get_bool(parts[3])
         #print(cmnd)
@@ -165,13 +178,14 @@ def response_to_request(cmnd,request, serViDev, mod_mqtt) -> tuple[int, bytearra
         #input("huhu")
         key = parts[0]
         
-        items = settings_ini.poll_items[key]
+        item = settings_ini.poll_items[key]
         
-        addr = items[0];
-        nLen = items[1];
-        factor = items[2];
-        if(numelms > 3):
-            signed = utils.get_bool(items[3])
+        addr = item[0];
+        nLen = item[1];
+        fFactor = item[2];
+        bSigned = False
+        if(len(item) > 3):
+            bSigned = utils.get_bool(item[3])
             
         #print(addr)
         #input("test")
@@ -191,7 +205,7 @@ def response_to_request(cmnd,request, serViDev, mod_mqtt) -> tuple[int, bytearra
                         #signd = False
                         #if(numelms > 3):
                         #    signd = utils.get_bool(parts[3])
-                        val = get_value(data, factor, signed)
+                        val = get_value(data, fFactor, bSigned)
                         #print("Value:"+val)
                 else:
                     #return raw
@@ -206,7 +220,7 @@ def response_to_request(cmnd,request, serViDev, mod_mqtt) -> tuple[int, bytearra
             else:
                 val = "?"
             
-        #print(f"{key}: {utils.bytesval(data,factor,signed)}")    
+        #print(f"{key}: {utils.bytes2val(data,fFactor,bSigned)}")    
                 
         retstr = get_retstr(retcode, addr, val)
         
@@ -252,11 +266,17 @@ def response_to_request(cmnd,request, serViDev, mod_mqtt) -> tuple[int, bytearra
         
         #print("WRITE")
         
-        item = settings_ini.poll_items[parts[0]]
+        key = parts[0]
+        value = parts[1]
+        
+        item = settings_ini.poll_items[key]
         
         addr = item[0];
         nLen = item[1];
-        factor = item[2];
+        fFactor = item[2];
+        bSigned = False
+        if(len(item) > 3):
+            bSigned = utils.get_bool(item[3])
         
         #print(addr)
         #print(nLen)
@@ -264,22 +284,26 @@ def response_to_request(cmnd,request, serViDev, mod_mqtt) -> tuple[int, bytearra
         #input("press key")
         
         
-        nVal = int(utils.get_int(parts[1])/factor)
         
-        bVal = nVal.to_bytes(nLen, 'little')
+       # nVal = int(utils.get_int(value)/factor)
         
+        #bVal = nVal.to_bytes(nLen, 'little')
+        
+        bVal = set_value(value, nLen, fFactor, bSigned)
         
         #retcode, addr, data = optolinkvs2.write_datapoint_ext(utils.get_int(parts[0]), bval, serViDev)
         
         retcode, addr, data = optolinkvs2.write_datapoint_ext(addr, bVal, serViDev)
         
         if(retcode == 1): 
-            val = int.from_bytes(bVal, 'little')*factor
+            #val = int.from_bytes(bVal, 'little')*factor
+            val = get_value(bVal, fFactor, bSigned)
         elif(data):
             # probably error message
             val = utils.arr2hexstr(data)  #f"{int.from_bytes(data, 'little')} ({utils.bbbstr(data)})"
         else:
             val = "?"
+        
         retstr = get_retstr(retcode, addr, val)    
 
     #elif(cmnd in ["write", "w"]):  # "write;0x6300;1;48"

@@ -274,7 +274,7 @@ def main():
                                 if(len(items) > 3):
                                     signed = utils.get_bool(items[3])
                                 
-                                mod_mqtt_util.publish_read(msg[0], addr, utils.bytesval(data,scale,signed))
+                                mod_mqtt_util.publish_read(msg[0], addr, utils.bytes2val(data,scale,signed))
                             
                             
                             
